@@ -1,0 +1,12 @@
+[package]
+name = "pluralistic-rs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "pluralistic_rs"
+path = "src/lib.rs"
+
+[[bin]]
+name = "pluralistic"
+path = "src/main.rs"
