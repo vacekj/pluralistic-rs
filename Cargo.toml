@@ -10,3 +10,6 @@ path = "src/lib.rs"
 [[bin]]
 name = "pluralistic"
 path = "src/main.rs"
+[dependencies]
+arr_macro = "0.2.1"
+rand = "0.8.5"
