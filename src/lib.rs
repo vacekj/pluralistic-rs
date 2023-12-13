@@ -1,15 +1,14 @@
 #![feature(slice_flatten)]
 
-use arr_macro::arr;
+use rand::random;
 use rand::seq::SliceRandom;
-use rand::{random, Rng};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
-struct Contribution {
-    recipient: String,
-    amount: f64,
-    sender: String,
+pub struct Contribution {
+    pub recipient: String,
+    pub amount: f64,
+    pub sender: String,
 }
 
 trait Random {
@@ -32,12 +31,12 @@ impl Random for Contribution {
 }
 
 #[derive(Debug)]
-struct Matcha {
+pub struct Matcha {
     recipient: String,
     matcha: f64,
 }
 
-fn calculate_linear_qf(contributions: Vec<Contribution>, matching_pot: f64) -> Vec<Matcha> {
+pub fn calculate_linear_qf(contributions: Vec<Contribution>, matching_pot: f64) -> Vec<Matcha> {
     let mut total_match = 0f64;
     let mut has_saturated = false;
     let mut contributions_by_recipient: HashMap<String, HashMap<String, Contribution>> =
@@ -63,8 +62,6 @@ fn calculate_linear_qf(contributions: Vec<Contribution>, matching_pot: f64) -> V
             }
         }
     }
-
-    dbg!(&contributions_by_recipient);
 
     for details in contributions_by_recipient {
         let mut sum_of_sqrt_contrib = 0f64;
@@ -94,15 +91,14 @@ fn calculate_linear_qf(contributions: Vec<Contribution>, matching_pot: f64) -> V
         }
     }
 
-    dbg!(&distributions);
-    dbg!(has_saturated);
-
     distributions
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use arr_macro::arr;
+    use rand::*;
 
     fn generate_contributions() -> Vec<Contribution> {
         arr![Contribution::rnd(); 10].to_vec()
