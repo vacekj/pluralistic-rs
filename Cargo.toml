@@ -6,6 +6,7 @@ description = "A Rust crate for Quadratic Funding calculations"
 license = "MIT"
 repository = "https://github.com/vacekj/pluralistic-rs"
 homepage = "https://github.com/vacekj/pluralistic-rs"
+exclude = ["benches/votes.json"]
 
 [lib]
 name = "pluralistic_rs"
