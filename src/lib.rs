@@ -17,7 +17,7 @@ trait Random {
 
 impl Random for Contribution {
     fn rnd() -> Self {
-        let names = ["Alice", "Bob", "Thomas", "Ben"];
+        let names = ["Alice", "Bob", "Thomas", "Ben", "Jason", "Mary"];
         let rand_names = names
             .choose_multiple(&mut rand::thread_rng(), 2)
             .collect::<Vec<&&str>>();
@@ -47,6 +47,7 @@ pub enum MatchingCapStrategy {
 pub struct LinearQfOptions {
     pub matching_cap_amount: Option<f64>,
     pub matching_cap_strategy: MatchingCapStrategy,
+    pub upscale: bool,
 }
 
 pub fn calculate_linear_qf(
@@ -108,6 +109,13 @@ pub fn calculate_linear_qf(
         }
     }
 
+    if options.upscale && total_match < matching_pot {
+        let upscale_factor = matching_pot / total_match;
+        for distribution in &mut distributions {
+            distribution.matcha *= upscale_factor;
+        }
+    }
+
     if let Some(cap) = options.matching_cap_amount {
         match options.matching_cap_strategy {
             MatchingCapStrategy::Cap => {
@@ -132,6 +140,22 @@ mod tests {
 
     fn generate_contributions() -> Vec<Contribution> {
         arr![Contribution::rnd(); 10].to_vec()
+    }
+
+    #[test]
+    fn test_upscale_to_pot() {
+        let contributions = arr![Contribution::rnd(); 50].to_vec();
+        let matching_pot = 1000.0;
+        let options = LinearQfOptions {
+            upscale: true,
+            ..Default::default()
+        };
+
+        let distributions = calculate_linear_qf(contributions, matching_pot, options);
+
+        let total_distributed: f64 = distributions.iter().map(|d| d.matcha).sum();
+        assert!(total_distributed <= matching_pot);
+        assert!(total_distributed >= matching_pot * 0.99); // Allow a small margin for rounding errors
     }
 
     #[test]
