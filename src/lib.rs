@@ -36,7 +36,24 @@ pub struct Matcha {
     matcha: f64,
 }
 
-pub fn calculate_linear_qf(contributions: Vec<Contribution>, matching_pot: f64) -> Vec<Matcha> {
+#[derive(Default)]
+pub enum MatchingCapStrategy {
+    #[default]
+    Cap,
+    Redistribute,
+}
+
+#[derive(Default)]
+pub struct LinearQfOptions {
+    pub matching_cap_amount: Option<f64>,
+    pub matching_cap_strategy: MatchingCapStrategy,
+}
+
+pub fn calculate_linear_qf(
+    contributions: Vec<Contribution>,
+    matching_pot: f64,
+    options: LinearQfOptions,
+) -> Vec<Matcha> {
     let mut total_match = 0f64;
     let mut has_saturated = false;
     let mut contributions_by_recipient: HashMap<String, HashMap<String, Contribution>> =
@@ -91,6 +108,19 @@ pub fn calculate_linear_qf(contributions: Vec<Contribution>, matching_pot: f64) 
         }
     }
 
+    if let Some(cap) = options.matching_cap_amount {
+        match options.matching_cap_strategy {
+            MatchingCapStrategy::Cap => {
+                for matcha in &mut distributions {
+                    matcha.matcha = matcha.matcha.clamp(0.0, cap);
+                }
+            }
+            MatchingCapStrategy::Redistribute => {
+                todo!("redistribution strategy is not implemented (and unfair)")
+            }
+        }
+    }
+
     distributions
 }
 
@@ -130,6 +160,6 @@ mod tests {
             .into_iter()
             .flatten()
             .collect::<Vec<Contribution>>();
-        calculate_linear_qf(contributions, 10_000f64);
+        calculate_linear_qf(contributions, 10_000f64, LinearQfOptions::default());
     }
 }
