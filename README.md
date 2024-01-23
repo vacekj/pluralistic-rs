@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `matcha_funding` library is a Rust crate providing functionality to calculate quadratic funding distributions based
+The `pluralistic-rs` library is a Rust crate providing functionality to calculate quadratic funding distributions based
 on a set of contributions. The library includes a robust implementation for generating random contributions, managing
 contributions, and applying quadratic funding formulas to distribute a matching pot of funds.
 
@@ -16,11 +16,11 @@ contributions, and applying quadratic funding formulas to distribute a matching 
 
 ## Installation
 
-Add `matcha_funding` to your `Cargo.toml` dependencies:
+Add `pluralistic-rs` to your `Cargo.toml` dependencies:
 
 ```toml
 [dependencies]
-matcha_funding = "0.1.0"
+pluralistic-rs = "0.1.0"
 ```
 
 ## Usage
@@ -39,7 +39,7 @@ matcha_funding = "0.1.0"
 ## Example
 
 ```rust
-use matcha_funding::{Contribution, calculate_linear_qf, LinearQfOptions, Random};
+use pluralistic_rs::{Contribution, calculate_linear_qf, LinearQfOptions, Random};
 
 fn main() {
     // Generate random contributions

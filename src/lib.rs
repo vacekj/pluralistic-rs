@@ -116,15 +116,36 @@ pub fn calculate_linear_qf(
         }
     }
 
+    // Apply matching cap and redistribute if necessary
     if let Some(cap) = options.matching_cap_amount {
-        match options.matching_cap_strategy {
-            MatchingCapStrategy::Cap => {
-                for matcha in &mut distributions {
-                    matcha.matcha = matcha.matcha.clamp(0.0, cap);
-                }
+        let mut overflow_total = 0f64;
+        let mut eligible_for_redistribution = 0usize;
+
+        // First pass to apply cap and calculate overflow
+        for matcha in &mut distributions {
+            if matcha.matcha > cap {
+                overflow_total += matcha.matcha - cap;
+                matcha.matcha = cap;
+            } else {
+                eligible_for_redistribution += 1;
             }
-            MatchingCapStrategy::Redistribute => {
-                todo!("redistribution strategy is not implemented (and unfair)")
+        }
+
+        // Redistribution logic
+        if matches!(
+            options.matching_cap_strategy,
+            MatchingCapStrategy::Redistribute
+        ) && overflow_total > 0f64
+        {
+            let redistribution_amount = overflow_total / eligible_for_redistribution as f64;
+            for matcha in &mut distributions {
+                if matcha.matcha < cap {
+                    matcha.matcha += redistribution_amount;
+                    // Ensure not to exceed the cap after redistribution
+                    if matcha.matcha > cap {
+                        matcha.matcha = cap;
+                    }
+                }
             }
         }
     }
@@ -185,5 +206,59 @@ mod tests {
             .flatten()
             .collect::<Vec<Contribution>>();
         calculate_linear_qf(contributions, 10_000f64, LinearQfOptions::default());
+    }
+
+    #[test]
+    fn test_redistribution_strategy() {
+        let mut rng = rand::thread_rng();
+
+        let a_contribs = arr![Contribution {
+                recipient: "A".into(),
+                amount: 200f64,
+                sender: rng.gen::<char>().into(),
+            }; 5]
+        .to_vec();
+        let b_contribs = arr![Contribution {
+                recipient: "B".into(),
+                amount: 500f64,
+                sender: rng.gen::<char>().into(),
+            }; 2]
+        .to_vec();
+        let c_contribs = arr![Contribution {
+                recipient: "C".into(),
+                amount: 50f64,
+                sender: rng.gen::<char>().into(),
+            }; 20]
+        .to_vec();
+        let contributions = vec![a_contribs, b_contribs, c_contribs]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<Contribution>>();
+
+        let matching_pot = 10000.0;
+        let cap = 10.0; // Set a cap that would force redistribution
+
+        let options = LinearQfOptions {
+            matching_cap_amount: Some(cap),
+            matching_cap_strategy: MatchingCapStrategy::Redistribute,
+            upscale: false, // Upscaling not relevant for this test
+        };
+
+        let distributions = calculate_linear_qf(contributions, matching_pot, options);
+
+        // Verify that none of the distributions exceed the cap
+        assert!(
+            distributions.iter().all(|d| d.matcha <= cap),
+            "All distributions must be within the cap."
+        );
+
+        // Calculate total distributed amount to ensure it's within the matching pot
+        let total_distributed: f64 = distributions.iter().map(|d| d.matcha).sum();
+
+        // The total distributed amount should be less than or equal to the matching pot
+        assert!(
+            total_distributed <= matching_pot,
+            "Total distributed amount must not exceed the matching pot."
+        );
     }
 }
