@@ -1,5 +1,3 @@
-#![feature(slice_flatten)]
-
 use rand::random;
 use rand::seq::SliceRandom;
 use std::collections::HashMap;
